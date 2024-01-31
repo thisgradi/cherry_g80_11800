@@ -1,0 +1,121 @@
+*DIP numeration is used. It does not correspond to pin numbers of MCU or SR themselves.*
+
+This is a schematic of the breadboard mockup for testing basic features of
+G80-11800, based on the WeAct Blackpill V3.0 PCB, feature the STM32F411CEU6 MCU.
+				  
+LED_SER		B12	1 |  USBC  |40	5V
+LED_RCLK	B13	2 |		   |39	GND
+LED_SRCLK	B14	3 |		   |38	3V3
+			B15	4 |		   |37	B10	ROW2
+			A8  5 |        |36  B2
+			A9	6 |WeAct BP|35	B1  ROW3
+PULL_DOWN	A10	7 |	 V3.0  |34	B0  ROW4
+			A11	8 |Top view|33	A7
+			A12	9 |		   |32	A6
+COLS_SER	A15	10|		   |31	A5
+COLS_SRCLK	B3	11|		   |30	A4
+COLS_RCLK	B4	12|		   |29	A3	Trackball DATA
+	Piezo+  B5	13|		   |28	A2	Trackball CLK
+	ROW0	B6	14|		   |27	A1	ROW5
+	ROW1	B7	15|	  SS   |26	A0	ROW6
+OLED SCL	B8	16|	  WW   |25	R (NRST) momentary reset (by connecting to ground)
+OLED SDA	B9	17|  3DSG  |24	C15
+			5V	18|  VICN  |23	C14
+			GND	19|  3OKD  |22	C13
+			3V3	20|  ||||  |21	VB
+
+
+						Matrix
+
+					(COL2ROW)
+							   diodes
+			COL0 -	Button0		->|---|
+									  |
+									 ROW0
+			
+
+
+						Speaker
+		Variable resistor R is connected to anode.
+	Mounting it to the cathode creates interference.
+	
+				  	      .
+				  T	     /|
+			GND	-[R] - || | + B5
+					     \|
+						  '
+						
+
+
+						Trackball
+			When it stops working all of a sudden,
+		shorting RST pad to ground (the one that causes
+	rebooting), followed by resetting the Blackpill seems useful.
+
+ ,________________________________,
+ |              A B C             |		A - (  -   ) : VCC
+ |   O          D E F             |		B - (  -   ) :
+ |				  				  |		C - (Black ) : GND	- GND
+ |	     	Bottom view	  		  |		D - (Green ) : VCC	- 5V
+ |   Logitech T-SBC12-CPQ (161A)  |		E - (White ) : DAT	- A3 (with 4.4K pull-up resistor)
+ |                              O |		F - (Yellow) : CLK	- A2 (with 4.4K pull-up resistor)
+ |   O                		  	  |
+ |________________________________|
+
+
+
+ 					LEDs Shift register
+ 				RG LEDs with common anode
+ 				can use only one color at
+ 				a time. Anodes are connected
+ 				to a variable resistor.
+
+LED0R+	Output1	1 |	    KEY	   |16	VCC
+LED0G+	Output2	2 |			   |15	Output0
+LED1R+	Output3	3 | SN74HC595N |14	INPUT			(SER)		B12
+LED1G+	Output4	4 |	  (SIPO)   |13  Disable output	(OE inv)	GND
+LED2R+	Output5	5 |	SHIFT REG  |12  Refresh output	(RCLK)		B13
+LED2G+	Output6	6 |  Top view  |11  Clock			(SRCLK)		B14
+		Output7	7 |			   |10  Retain info		(SRCLR inv) 5V
+			GND	8 |			   |9	Daisychain out	(QH')
+
+
+						MATRIX ("MREG" - matrix register)
+
+COL1	Output1	1 |	    KEY	   |16	VCC
+COL2	Output2	2 |			   |15	Output0						COL0
+COL3	Output3	3 | SN74HC595N |14	INPUT			(SER)		COLS_SER
+COL4	Output4	4 |	  (SIPO)   |13  Disable output	(OE inv)	GND
+COL5	Output5	5 |	SHIFT REG  |12  Refresh output	(RCLK)		B4
+COL6	Output6	6 |  Top view  |11  Clock			(SRCLK)		B3
+COL7	Output7	7 |			   |10  Retain info		(SRCLR inv) 5V
+			GND	8 |	  MREG0	   |9	Daisychain out	(QH')		MREG1_SER
+
+COL9	Output1	1 |	    KEY	   |16	VCC
+COL10	Output2	2 |			   |15	Output0						COL8
+COL11	Output3	3 | SN74HC595N |14	INPUT			(SER)		MREG1_SER
+COL12	Output4	4 |	  (SIPO)   |13  Disable output	(OE inv)	GND
+COL13	Output5	5 |	SHIFT REG  |12  Refresh output	(RCLK)		B4
+COL14	Output6	6 |  Top view  |11  Clock			(SRCLK)		B3
+COL15	Output7	7 |			   |10  Retain info		(SRCLR inv) 5V
+			GND	8 |	  MREG1	   |9	Daisychain out	(QH')		MREG2_SER
+
+COL17	Output1	1 |	    KEY	   |16	VCC
+COL18	Output2	2 |			   |15	Output0						COL16
+		Output3	3 | SN74HC595N |14	INPUT			(SER)		MREG2_SER
+		Output4	4 |	  (SIPO)   |13  Disable output	(OE inv)	GND
+		Output5	5 |	SHIFT REG  |12  Refresh output	(RCLK)		B4
+		Output6	6 |  Top view  |11  Clock			(SRCLK)		B3
+		Output7	7 |			   |10  Retain info		(SRCLR inv) 5V
+			GND	8 |	  MREG2	   |9	Daisychain out	(QH')
+
+
+				I2C OLED display (SSD1306, 128x32)
+
+				,________________________________,
+				| ,_________________________,	 |
+				| |                  		|  A |	A - GND
+				| |     Top view       		|  B |	B - VCC 5V
+				| |                   		|  C |	C - SCK B8
+				| |_________________________|  D |	D - SDA B9
+				|________________________________|
